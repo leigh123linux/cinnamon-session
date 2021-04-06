@@ -36,11 +36,35 @@
 
 static gchar *_saved_session_dir = NULL;
 
+/* These are variables that will not be passed on to subprocesses
+ * (either directly, via systemd or DBus).
+ * Some of these are blacklisted as they might end up in the wrong session
+ * (e.g. XDG_VTNR), others because they simply must never be passed on
+ * (NOTIFY_SOCKET).
+ */
 static const char * const variable_blacklist[] = {
     "NOTIFY_SOCKET",
     "XDG_SEAT",
     "XDG_SESSION_ID",
     "XDG_VTNR",
+    NULL
+};
+
+/* The following is copied from GDMs spawn_session function.
+ *
+ * Environment variables listed here will be copied into the user's service
+ * environments if they are set in cinnamon-session's environment. If they are
+ * not set in cinnamon-session's environment, they will be removed from the
+ * service environments. This is to protect against environment variables
+ * leaking from previous sessions (e.g. when switching from classic to
+ * default Cinnamon $CINNAMON_SHELL_SESSION_MODE will become unset).
+ */
+static const char * const variable_unsetlist[] = {
+    "DISPLAY",
+    "XAUTHORITY",
+    "WAYLAND_DISPLAY",
+    "WAYLAND_SOCKET",
+    "CINNAMON_SHELL_SESSION_MODE",
     NULL
 };
 
@@ -656,10 +680,19 @@ csm_util_export_user_environment (GError     **error)
 
         entries = g_get_environ ();
 
-        for (; variable_blacklist[i] != NULL; i++)
+        for (i = 0; variable_blacklist[i] != NULL; i++) {
                 entries = g_environ_unsetenv (entries, variable_blacklist[i]);
+        }
 
-        g_variant_builder_init (&builder, G_VARIANT_TYPE ("as"));
+        g_variant_builder_init (&builder, G_VARIANT_TYPE ("(asas)"));
+
+        g_variant_builder_open (&builder, G_VARIANT_TYPE ("as"));
+        for (i = 0; variable_unsetlist[i] != NULL; i++) {
+                g_variant_builder_add (&builder, "s", variable_unsetlist[i]);
+        }
+        g_variant_builder_close (&builder);
+
+        g_variant_builder_open (&builder, G_VARIANT_TYPE ("as"));
         for (i = 0; entries[i] != NULL; i++) {
                 const char *entry = entries[i];
 
@@ -671,6 +704,7 @@ csm_util_export_user_environment (GError     **error)
 
                 g_variant_builder_add (&builder, "s", entry);
         }
+        g_variant_builder_close (&builder);
         g_regex_unref (regex);
 
         g_strfreev (entries);
@@ -679,9 +713,8 @@ csm_util_export_user_environment (GError     **error)
                                              "org.freedesktop.systemd1",
                                              "/org/freedesktop/systemd1",
                                              "org.freedesktop.systemd1.Manager",
-                                             "SetEnvironment",
-                                             g_variant_new ("(@as)",
-                                                            g_variant_builder_end (&builder)),
+                                             "UnsetAndSetEnvironment",
+                                             g_variant_builder_end (&builder),
                                              NULL,
                                              G_DBUS_CALL_FLAGS_NONE,
                                              -1, NULL, &bus_error);
