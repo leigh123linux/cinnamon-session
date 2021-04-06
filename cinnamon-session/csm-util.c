@@ -559,7 +559,7 @@ csm_util_update_activation_environment (const char  *variable,
                                              g_variant_new ("(@a{ss})",
                                                             g_variant_builder_end (&builder)),
                                              NULL,
-                                             G_DBUS_CALL_FLAGS_NONE,
+                                             G_DBUS_CALL_FLAGS_NO_AUTO_START,
                                              -1, NULL, &bus_error);
 
         if (bus_error != NULL) {
@@ -639,7 +639,7 @@ csm_util_export_activation_environment (GError     **error)
                                              g_variant_new ("(@a{ss})",
                                                             g_variant_builder_end (&builder)),
                                              NULL,
-                                             G_DBUS_CALL_FLAGS_NONE,
+                                             G_DBUS_CALL_FLAGS_NO_AUTO_START,
                                              -1, NULL, &bus_error);
 
         if (bus_error != NULL) {
@@ -716,7 +716,7 @@ csm_util_export_user_environment (GError     **error)
                                              "UnsetAndSetEnvironment",
                                              g_variant_builder_end (&builder),
                                              NULL,
-                                             G_DBUS_CALL_FLAGS_NONE,
+                                             G_DBUS_CALL_FLAGS_NO_AUTO_START,
                                              -1, NULL, &bus_error);
 
         if (bus_error != NULL) {
@@ -763,7 +763,7 @@ csm_util_update_user_environment (const char  *variable,
                                              g_variant_new ("(@as)",
                                                             g_variant_builder_end (&builder)),
                                              NULL,
-                                             G_DBUS_CALL_FLAGS_NONE,
+                                             G_DBUS_CALL_FLAGS_NO_AUTO_START,
                                              -1, NULL, &bus_error);
 
         if (bus_error != NULL) {
