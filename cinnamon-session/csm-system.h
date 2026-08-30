@@ -57,6 +57,7 @@ struct _CsmSystemInterface
         gboolean (* can_hibernate)    (CsmSystem *system);
         void     (* attempt_stop)     (CsmSystem *system);
         void     (* attempt_restart)  (CsmSystem *system);
+        void     (* complete_shutdown) (CsmSystem *system);
         void     (* hybrid_sleep)     (CsmSystem *system);
         void     (* suspend)          (CsmSystem *system,
 				       gboolean suspend_then_hibernate);
@@ -99,6 +100,8 @@ gboolean   csm_system_can_hibernate    (CsmSystem *system);
 void       csm_system_attempt_stop     (CsmSystem *system);
 
 void       csm_system_attempt_restart  (CsmSystem *system);
+
+void       csm_system_complete_shutdown (CsmSystem *system);
 
 void       csm_system_hybrid_sleep     (CsmSystem *system);
 
